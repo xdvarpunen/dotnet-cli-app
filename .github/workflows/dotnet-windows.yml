@@ -1,20 +1,4 @@
-# This workflow uses actions that are not certified by GitHub.
-# They are provided by a third-party and are governed by
-# separate terms of service, privacy policy, and support
-# documentation.
-
-# This workflow will build, test, sign and package a WPF or Windows Forms desktop application
-# built on .NET Core.
-# To learn how to migrate your existing application to .NET Core,
-# refer to https://docs.microsoft.com/en-us/dotnet/desktop-wpf/migration/convert-project-from-net-framework
-#
-# To configure this workflow:
-#
-# 1. Configure environment variables
-# GitHub sets default environment variables for every workflow run.
-# Replace the variables relative to your project in the "env" section below.
-
-name: .NET Core Desktop
+name: .NET single-file executable console application
 
 on:
   release:
@@ -31,8 +15,9 @@ jobs:
     runs-on: windows-latest
     
     env:
-      Solution_Name: GithubPipelineProducedConsoleApp
+      PROJECT_PATH: GithubPipelineProducedConsoleApp/GithubPipelineProducedConsoleApp/GithubPipelineProducedConsoleApp.csproj
 
+    # Checkout project
     steps:
     - name: Checkout
       uses: actions/checkout@v3
@@ -44,7 +29,37 @@ jobs:
       uses: actions/setup-dotnet@v3
       with:
         dotnet-version: 6.0.x
+        
+    # Restore project
+    - name: Restore Project
+      run: dotnet restore ${{ env.PROJECT_PATH }}
 
-    # Add  MSBuild to the PATH: https://github.com/microsoft/setup-msbuild
-    - name: Setup MSBuild.exe
-      uses: microsoft/setup-msbuild@v1.0.2
+    # Publish project
+    - name: Publish Project
+      run: dotnet publish ${{ env.PROJECT_PATH }} -c Release --self-contained -r win-x64 -p:PublishSingleFile=true --no-restore
+
+    # Create zip file
+    - name: Create Zip File
+      uses: papeloto/action-zip@v1
+      with:
+        files: ${{ env.EXE_PATH }}
+        dest: ${{ env.ZIP_PATH }}
+
+    # Initialize Release
+    - name: Initialize Release
+      uses: actions/create-release@v1
+      id: create_release
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: ${{ github.ref }}
+
+    # Create Release
+    - name: Create Release
+      uses: csexton/release-asset-action@v2
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        file: ${{ env.ZIP_PATH }}
+        release-url: ${{ steps.create_release.outputs.upload_url }}
+          
