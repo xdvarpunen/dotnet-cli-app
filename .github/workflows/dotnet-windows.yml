@@ -16,6 +16,8 @@ jobs:
     
     env:
       PROJECT_PATH: GithubPipelineProducedConsoleApp/GithubPipelineProducedConsoleApp/GithubPipelineProducedConsoleApp.csproj
+      ZIP_PATH: GithubPipelineProducedConsoleApp/bin/Release/net6.0/win-x64/publish/GithubPipelineProducedConsoleApp.zip
+      EXE_PATH: GithubPipelineProducedConsoleApp/bin/Release/net6.0/win-x64/publish/GithubPipelineProducedConsoleApp.exe
 
     # Checkout project
     steps:
